@@ -1,1 +1,49 @@
-include 
+#include <Arduino.h>
+
+// 定义引脚
+const int pwmPin = 9; // PWM 输出引脚，用于控制电流大小
+const int dirPin1 = 7; // 方向控制引脚 1，用于控制电流方向
+const int dirPin2 = 8; // 方向控制引脚 2，用于控制电流方向
+const int innerHumidityPin = A0; // 内部湿度传感器输入引脚
+const int outerHumidityPin = A1; // 外部湿度传感器输入引脚
+
+void setup() {
+    // 设置引脚模式
+    pinMode(pwmPin, OUTPUT);
+    pinMode(dirPin1, OUTPUT);
+    pinMode(dirPin2, OUTPUT);
+    pinMode(innerHumidityPin, INPUT);
+    pinMode(outerHumidityPin, INPUT);
+    Serial.begin(9600); // 初始化串口通信
+}
+
+void loop() {
+    int innerHumidity = analogRead(innerHumidityPin); // 读取内部湿度传感器数据
+    int outerHumidity = analogRead(outerHumidityPin); // 读取外部湿度传感器数据
+    int humidityDifference = innerHumidity - outerHumidity; // 计算湿度差
+
+    // 根据湿度差决定电流方向和大小
+    if (humidityDifference > 50) { // 湿度差大于 50，正向电流
+        stopCurrent(); // 停止电流几秒钟
+        digitalWrite(dirPin1, HIGH);
+        digitalWrite(dirPin2, LOW);
+        int pwmValue = map(humidityDifference, 50, 1023, 0, 255); // 将湿度差映射到 PWM 值
+        analogWrite(pwmPin, pwmValue);
+    } else if (humidityDifference < -50) { // 湿度差小于 -50，反向电流
+        stopCurrent(); // 停止电流几秒钟
+        digitalWrite(dirPin1, LOW);
+        digitalWrite(dirPin2, HIGH);
+        int pwmValue = map(-humidityDifference, 50, 1023, 0, 255); // 将湿度差映射到 PWM 值
+        analogWrite(pwmPin, pwmValue);
+    } else { // 湿度差在 -50 到 50 之间，停止电流
+        stopCurrent();
+    }
+
+    delay(1000); // 每秒钟读取一次传感器数据
+}
+
+// 停止电流几秒钟
+void stopCurrent() {
+    analogWrite(pwmPin, 0); // 停止 PWM 输出
+    delay(3000); // 停止 3 秒钟
+}

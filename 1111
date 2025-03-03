@@ -1,1 +1,30 @@
-include 
+#include <Arduino.h> // 包含 Arduino 库
+
+// 定义引脚
+const int pwmPin = 9; // PWM 输出引脚，用于控制电流大小
+const int dirPin1 = 7; // 方向控制引脚 1，用于控制电流方向
+const int dirPin2 = 8; // 方向控制引脚 2，用于控制电流方向
+const int sensorPin = A0; // 传感器输入引脚，用于读取传感器数据
+
+void setup() {
+    // 设置引脚模式
+    pinMode(pwmPin, OUTPUT); // 将 pwmPin 设置为输出模式
+    pinMode(dirPin1, OUTPUT); // 将 dirPin1 设置为输出模式
+    pinMode(dirPin2, OUTPUT); // 将 dirPin2 设置为输出模式
+    pinMode(sensorPin, INPUT); // 将 sensorPin 设置为输入模式
+}
+
+void loop() {
+    int sensorValue = analogRead(sensorPin); // 读取传感器数据，返回 0 到 1023 之间的值
+    int pwmValue = map(sensorValue, 0, 1023, 0, 255); // 将传感器数据映射到 PWM 值，范围从 0 到 255
+
+    if (sensorValue > 512) { // 如果传感器值大于 512
+        digitalWrite(dirPin1, HIGH); // 设置 dirPin1 为高电平
+        digitalWrite(dirPin2, LOW); // 设置 dirPin2 为低电平
+    } else { // 如果传感器值小于或等于 512
+        digitalWrite(dirPin1, LOW); // 设置 dirPin1 为低电平
+        digitalWrite(dirPin2, HIGH); // 设置 dirPin2 为高电平
+    }
+
+    analogWrite(pwmPin, pwmValue); // 输出 PWM 信号，控制电流大小
+}
